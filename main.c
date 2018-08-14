@@ -3,9 +3,13 @@
 #include <SDL2/SDL.h>
 #include <stdbool.h>
 
-int which_button(int x_coordinate, int y_coordinate, int num_buttons){
-	
-
+int button_index(int x_coordinate, int y_coordinate){ 
+	//gets coordinates x, y; returns button index
+	if ((button_size == 0) || (num_buttons == 0)){
+		perror("neither button size nor number of buttons must be")
+	}
+	int index = (x_coordinate/button_size) + ((y_coordinate/button_size) * num_buttons);
+	return index;
 }
 
 int main(void){
@@ -14,6 +18,7 @@ int main(void){
 	bool quit = false;
 	int button_size = 50;//size of a button in pixels
 	int num_buttons = 15; //number of buttons in one row/column
+	int index; //index of a button
 
 	SDL_Window *window; //create a window
 	SDL_Init(SDL_INIT_EVERYTHING);
@@ -38,6 +43,7 @@ int main(void){
 				quit = true;
 			}
 			if (event.type == SDL_MOUSEBUTTONDOWN){ //listen for mouse clicks
+				
 				if (event.button.button == SDL_BUTTON_LEFT){ //left
 					printf("left\n");
 				}
