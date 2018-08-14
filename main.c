@@ -3,10 +3,10 @@
 #include <SDL2/SDL.h>
 #include <stdbool.h>
 
-//int which_button(int x_coordinate, int y_coordinate, int num_buttons){
+int which_button(int x_coordinate, int y_coordinate, int num_buttons){
 	
 
-//}
+}
 
 int main(void){
 
