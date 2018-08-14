@@ -29,14 +29,16 @@ int main(void){
 		while(SDL_PollEvent(&event)){
 			if (event.type == SDL_QUIT){
 				quit = true;
-				//break;
 			}
+			if (event.type == SDL_KEYDOWN){
+				printf("key down\n");
+			}
+		
 		}
 	
 	}
 
 
-	SDL_Delay(5000);
 	SDL_DestroyWindow(window);
 	SDL_Quit();	
 	
