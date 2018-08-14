@@ -30,8 +30,13 @@ int main(void){
 			if (event.type == SDL_QUIT){
 				quit = true;
 			}
-			if (event.type == SDL_KEYDOWN){
-				printf("key down\n");
+			if (event.type == SDL_MOUSEBUTTONDOWN){
+				if (event.button.button == SDL_BUTTON_LEFT){
+					printf("left\n");
+				}
+				if (event.button.button == SDL_BUTTON_RIGHT){
+					printf("right\n");
+				}
 			}
 		
 		}
