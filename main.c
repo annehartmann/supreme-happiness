@@ -19,6 +19,10 @@ int main(void){
 		printf("could not create window: %s\n", SDL_GetError());
 		return 1;
 	}
+	SDL_Delay(3000);
+
+	SDL_DestroyWindow(window);
+	SDL_Quit();
 
 	return 0;
 
