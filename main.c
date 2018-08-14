@@ -1,8 +1,12 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <SDL2/SDL.h>
+#include <stdbool.h>
 
 int main(void){
+
+	SDL_Event event;
+	bool quit = false;
 
 	SDL_Window *window;
 	SDL_Init(SDL_INIT_EVERYTHING);
@@ -19,11 +23,23 @@ int main(void){
 		printf("could not create window: %s\n", SDL_GetError());
 		return 1;
 	}
-	SDL_Delay(3000);
+	
+	while (!quit){
 
+		while(SDL_PollEvent(&event)){
+			if (event.type == SDL_QUIT){
+				quit = true;
+				//break;
+			}
+		}
+	
+	}
+
+
+	SDL_Delay(5000);
 	SDL_DestroyWindow(window);
-	SDL_Quit();
-
+	SDL_Quit();	
+	
 	return 0;
 
 }
