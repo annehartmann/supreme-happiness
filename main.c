@@ -59,7 +59,6 @@ void reveal(int button_index, int num_of_buttons, int array[], int revealed[]){
 		case 0:
 			//reveal empty field
 			printf("revealed empty\n");
-			//set array to '10' or something else marking field as revealed
 			//recursively call reveal on neighbors
 			if ((button_index% num_of_buttons) != 0){
 				//field has left neighbor
