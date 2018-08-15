@@ -6,6 +6,7 @@
 int button_size;
 int num_buttons;
 
+
 int button_index(int x_coordinate, int y_coordinate, int num_of_buttons, int b_size){ 
 
 	//gets coordinates x, y; returns button index
@@ -22,15 +23,16 @@ int button_index(int x_coordinate, int y_coordinate, int num_of_buttons, int b_s
 	return index;
 }
 
-void reveal(int button_index, int num_of_buttons, int array[]){
+void reveal(int button_index, int num_of_buttons, int array[], int revealed[]){
 	//reveals number/mine of field button_index
 
-	//if this doesn't work check how booleans are treated during recursion
-
-
 	int number = array[button_index];//look up number in array
-	array[button_index] = 10;
-	//printf("number %d\n", number);
+	if (revealed[button_index] == 1){//check that field is not already revealed
+		return;
+	}
+	
+	revealed[button_index] = 1;//mark as revealed
+
 	//booleans noting which neighbors the field has
 	bool no_upper = true;
 	bool no_lower = true;
@@ -61,47 +63,46 @@ void reveal(int button_index, int num_of_buttons, int array[]){
 			//recursively call reveal on neighbors
 			if ((button_index% num_of_buttons) != 0){
 				//field has left neighbor
-				reveal(button_index - 1, button_index, array);
+				reveal(button_index - 1, button_index, array, revealed);
 				no_left = false;
 			} 
 			if ((button_index%num_of_buttons) != (num_of_buttons - 1)){
 				//field has right neighbor
-				reveal(button_index + 1, num_of_buttons, array);
+				reveal(button_index + 1, num_of_buttons, array, revealed);
 				no_right = false;
 			}
 			if (button_index >= num_of_buttons){
 				//field has upper neighbor
-				reveal(button_index - num_of_buttons, num_of_buttons, array);
+				reveal(button_index - num_of_buttons, num_of_buttons, array, revealed);
 				no_upper = false;
 			}
 			if (button_index < (num_of_buttons * (num_of_buttons - 1))){
 				//field has lower neighbor
-				reveal(button_index + num_of_buttons, num_of_buttons, array);
+				reveal(button_index + num_of_buttons, num_of_buttons, array, revealed);
 				no_lower = false;
 			}
 			if (!no_left && !no_upper){
 				//field has upper left neighbor
-				reveal(button_index - (num_of_buttons + 1), num_of_buttons, array);
+				reveal(button_index - (num_of_buttons + 1), num_of_buttons, array, revealed);
 			}
 			if (!no_upper && !no_right){
 				//field has upper right neighbor
-				reveal(button_index - num_of_buttons + 1, num_of_buttons, array);
+				reveal(button_index - num_of_buttons + 1, num_of_buttons, array, revealed);
 			}
 			if (!no_left && !no_lower){
 				//field has lower left neighbor
-				reveal(button_index + (num_of_buttons - 1), num_of_buttons, array);
+				reveal(button_index + (num_of_buttons - 1), num_of_buttons, array, revealed);
 			}
 			if (!no_lower && !no_right){
 				//field has lower right neighbor
-				reveal(button_index + num_of_buttons + 1, num_of_buttons, array);
+				reveal(button_index + num_of_buttons + 1, num_of_buttons, array, revealed);
 			}
 			break;
-		case 10: //necessary to avoid creating infinite loop of neighboring empty fields calling reveal on each other 
-			//marks revealed field
-			break;
+
 		default:
 			perror("This should not happen. Complain to Anne.");
 	}
+	return;
 	
 
 }
@@ -117,7 +118,7 @@ int main(void){
 	int x;
 	int y;
 	int dummy[25] = {-1,1,0,1,1,1,1,1,2,-1,1,1,2,-1,2,1,-1,2,1,1,1,1,1,0,0};
-	
+	int r[num_buttons * num_buttons];
 
 	SDL_Window *window; //create a window
 	SDL_Init(SDL_INIT_EVERYTHING);
@@ -127,7 +128,7 @@ int main(void){
 		SDL_WINDOWPOS_UNDEFINED,
 		(button_size * num_buttons),
 		(button_size * num_buttons),
-		SDL_WINDOW_RESIZABLE
+		SDL_WINDOW_ALWAYS_ON_TOP
 	);
 	
 	if (window == NULL){ //prints error and quits program if window creation fails
@@ -150,7 +151,7 @@ int main(void){
 				if (e.button.button == SDL_BUTTON_LEFT){ //left
 					//printf("clicked left at: %d, %d \n", x, y);
 					printf("clicked button %d\n", index);
-					reveal(index, num_buttons, dummy);
+					reveal(index, num_buttons, dummy, r);
 					
 				}
 				if (e.button.button == SDL_BUTTON_RIGHT){//right
