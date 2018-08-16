@@ -5,6 +5,7 @@
 
 int button_size;
 int num_buttons;
+bool dead;
 
 
 int button_index(int x_coordinate, int y_coordinate, int num_of_buttons, int b_size){ 
@@ -30,7 +31,10 @@ void reveal(int button_index, int num_of_buttons, int array[], int revealed[]){
 	if (revealed[button_index] == 1){//check that field is not already revealed
 		return;
 	}
-	
+	if (dead){
+		printf("you're dead.\n");
+		return;
+	}
 	revealed[button_index] = 1;//mark as revealed
 
 	//booleans noting which neighbors the field has
@@ -43,6 +47,7 @@ void reveal(int button_index, int num_of_buttons, int array[], int revealed[]){
 		case -1:
 			//BOOM
 			printf("BOOM!\n you died.\n");
+			dead = true;
 
 			break;
 		case 1:
@@ -109,6 +114,7 @@ void reveal(int button_index, int num_of_buttons, int array[], int revealed[]){
 
 int main(void){
 
+	bool dead = false;
 	SDL_Event e;
 	bool quit = false;
 	int button_size = 50;//size of a button in pixels
