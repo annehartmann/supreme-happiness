@@ -7,7 +7,10 @@
 
 int button_size;
 int num_of_buttons;
+int num_mines;
 bool dead;//log whether player died
+bool you_win;
+
 
 
 
@@ -27,17 +30,22 @@ int button_index(int x_coordinate, int y_coordinate, int num_of_buttons, int b_s
 	return index;
 }
 
-void reveal(int button_index, int num_of_buttons, int array[], int revealed[]){
+void reveal(int button_index, int num_of_buttons, int array[], int revealed[], int num_mines){
 	//reveals number/mine of field button_index
 
 	int number = array[button_index];//look up number in array
 	if (revealed[button_index] == 1){//check that field is not already revealed
 		return;
 	}
-	if (dead){
-		printf("you're dead.\n");
+	if (you_win){
+		printf("you won. What more do you want?\n");
 		return;
 	}
+	if (dead){
+		printf("you're dead. What are you trying to achieve?\n");
+		return;
+	}
+	
 	revealed[button_index] = 1;//mark as revealed
 
 	//booleans noting which neighbors the field has
@@ -62,48 +70,47 @@ void reveal(int button_index, int num_of_buttons, int array[], int revealed[]){
 		case 7:
 		case 8:
 			//reveal number
-			printf("revealed %d\n", number);
+			//printf("revealed %d\n", number);
 			break;
 		case 0:
 			//reveal empty field
-			printf("revealed empty\n");
+			//printf("revealed empty\n");
 			//recursively call reveal on neighbors
 			if ((button_index%num_of_buttons) != 0){
-				printf("%dmod%d=%d\n",button_index, num_of_buttons, (button_index%num_of_buttons));
 				//field has left neighbor
-				reveal(button_index - 1, num_of_buttons, array, revealed);
+				reveal(button_index - 1, num_of_buttons, array, revealed, num_mines);
 				no_left = false;
 			} 
 			if ((button_index%num_of_buttons) != (num_of_buttons - 1)){
 				//field has right neighbor
-				reveal(button_index + 1, num_of_buttons, array, revealed);
+				reveal(button_index + 1, num_of_buttons, array, revealed, num_mines);
 				no_right = false;
 			}
 			if (button_index >= num_of_buttons){
 				//field has upper neighbor
-				reveal(button_index - num_of_buttons, num_of_buttons, array, revealed);
+				reveal(button_index - num_of_buttons, num_of_buttons, array, revealed, num_mines);
 				no_upper = false;
 			}
 			if (button_index < (num_of_buttons * (num_of_buttons - 1))){
 				//field has lower neighbor
-				reveal(button_index + num_of_buttons, num_of_buttons, array, revealed);
+				reveal(button_index + num_of_buttons, num_of_buttons, array, revealed, num_mines);
 				no_lower = false;
 			}
 			if (!no_left && !no_upper){
 				//field has upper left neighbor
-				reveal(button_index - (num_of_buttons + 1), num_of_buttons, array, revealed);
+				reveal(button_index - (num_of_buttons + 1), num_of_buttons, array, revealed, num_mines);
 			}
 			if (!no_upper && !no_right){
 				//field has upper right neighbor
-				reveal(button_index - num_of_buttons + 1, num_of_buttons, array, revealed);
+				reveal(button_index - num_of_buttons + 1, num_of_buttons, array, revealed, num_mines);
 			}
 			if (!no_left && !no_lower){
 				//field has lower left neighbor
-				reveal(button_index + (num_of_buttons - 1), num_of_buttons, array, revealed);
+				reveal(button_index + (num_of_buttons - 1), num_of_buttons, array, revealed, num_mines);
 			}
 			if (!no_lower && !no_right){
 				//field has lower right neighbor
-				reveal(button_index + num_of_buttons + 1, num_of_buttons, array, revealed);
+				reveal(button_index + num_of_buttons + 1, num_of_buttons, array, revealed, num_mines);
 			}
 			break;
 
@@ -112,12 +119,21 @@ void reveal(int button_index, int num_of_buttons, int array[], int revealed[]){
 	}
 
 	//check whether player has won
+	int fields_revealed = 0;
+	for (int j = 0; j < num_of_buttons * num_of_buttons; j++){
+		fields_revealed = fields_revealed + revealed[j];
+	}
+	if ((((num_of_buttons*num_of_buttons) - fields_revealed) == num_mines) && !dead){
+		printf("you win\n");
+		you_win = true;
+	}
 	return;
 	
 
 }
 
 int bomben_verteilen (int size, int array[], int anzahl_bomben){
+	//places anzahl_bomben bombs randomly in array of length size
 	if (anzahl_bomben > size) {
 		perror("Zu viele Bomben!!!");
 		return 1;
@@ -136,6 +152,7 @@ int bomben_verteilen (int size, int array[], int anzahl_bomben){
 }
 
 int minenherum(int current_x, int current_y, int size, int array[]) {
+	//counts number of mines adjacent to field 
 	int counter = 0;
 	for(int x_offset = -1; x_offset <= 1; ++x_offset){
 		for(int y_offset = -1; y_offset <= 1; ++y_offset){
@@ -154,6 +171,7 @@ int minenherum(int current_x, int current_y, int size, int array[]) {
 }
 
 int update_zahlen(int size, int array[]) {
+	//writes number of mines adjacent to field in array
 	for(int x = 0; x < size; x++) {
 		for(int y = 0; y < size; y++) {
 			int index = x + y * size;
@@ -222,9 +240,9 @@ void graph(int revealed[], int array[], int num_of_buttons,SDL_Window *window, i
 			.h = len_lines
 		};
 		if(revealed[i] == 1){
-			printf("Drawing x: %d, y: %d of type %d\n", x_shift, y_shift, array[i]);
+			//printf("Drawing x: %d, y: %d of type %d\n", x_shift, y_shift, array[i]);
 			if(array[i] >= 0){
-				printf("Drawing image %d\n", array[i]);
+				//printf("Drawing image %d\n", array[i]);
 				SDL_RenderCopy(renderer, images[array[i]], NULL, &texr);
 			}
 			if(array[i] < 0){
@@ -244,6 +262,7 @@ int main(void){
 
 	
 	bool dead = false;//set player alive
+	bool you_win = false;
 	SDL_Event e;
 	bool quit = false;
 	int button_size = 50;//size of a button in pixels
@@ -297,8 +316,8 @@ int main(void){
 
 				if (e.button.button == SDL_BUTTON_LEFT){ //left
 					//printf("clicked left at: %d, %d \n", x, y);
-					printf("clicked button %d\n", index);
-					reveal(index, num_of_buttons, array, r);
+					//printf("clicked button %d\n", index);
+					reveal(index, num_of_buttons, array, r, num_mines);
 					graph(r,array,num_of_buttons,window,window_size,renderer);
 					
 				}
