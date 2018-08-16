@@ -3,6 +3,7 @@
 #include <SDL2/SDL.h>
 #include <stdbool.h>
 #include <SDL2/SDL_image.h>
+#include <time.h>
 
 int button_size;
 int num_buttons;
@@ -112,6 +113,54 @@ void reveal(int button_index, int num_of_buttons, int array[], int revealed[]){
 
 }
 
+int bomben_verteilen (int size, int array[], int anzahl_bomben){
+	if (anzahl_bomben > size) {
+		perror("Zu viele Bomben!!!");
+		return 1;
+	}
+	time_t t;
+	srand((unsigned) time(&t));
+	for( int i = 0; i < anzahl_bomben; i++){
+		int feld_index = rand() % size;
+		if (array[feld_index] == -1) {
+			i--;
+		} else {
+			//printf("%d \n", feld_index);
+			array[feld_index] = -1;
+		}
+	}
+	return 0;
+}
+
+int minenherum(int current_x, int current_y, int size, int array[]) {
+	int counter = 0;
+	for(int x_offset = -1; x_offset <= 1; ++x_offset){
+		for(int y_offset = -1; y_offset <= 1; ++y_offset){
+			int x_feld = current_x + x_offset;
+			int y_feld = current_y + y_offset;
+			int index = x_feld + y_feld * size;
+		
+			if(x_feld >= 0 && x_feld < size && y_feld >= 0 && y_feld < size){
+				if(array[index] == -1){
+					counter++;			
+				}
+			}
+		}
+	}
+	return counter;
+}
+
+void update_zahlen(int size, int array[]) {
+	for(int x = 0; x < size; x++) {
+		for(int y = 0; y < size; y++) {
+			int index = x + y * size;
+			if (array[index] != -1) {
+				array[index] = minenherum(x, y, size, array);
+			}
+		}
+	}
+}
+
 
 void graph(int revealed[], int array[], int num_of_buttons,SDL_Window *window, int window_size,SDL_Renderer *renderer)
 {	
@@ -143,10 +192,12 @@ void graph(int revealed[], int array[], int num_of_buttons,SDL_Window *window, i
 			fprintf(stderr, "IMG_LoadTexture: %s: %s\n", path, SDL_GetError());
 		}
 	}
+
 	imgb = IMG_LoadTexture(renderer, "9.png");
 	if (!imgb) {
 		fprintf(stderr, "IMG_LoadTexture: imgb: %s\n", SDL_GetError());
 	}
+
 	SDL_SetRenderDrawColor(renderer, 255, 255, 255, SDL_ALPHA_OPAQUE);
 	if(SDL_SetRenderDrawColor(renderer, 255, 255, 255, SDL_ALPHA_OPAQUE) < 0){
 		printf("SetRenderDrawColor: %s\n", SDL_GetError());
@@ -196,12 +247,16 @@ int main(void){
 	int x;
 	int y;
 	const int window_size = num_of_buttons * button_size;
+	int array[25] = {0};
+	int num_mines = 3;
 	int dummy[25] = {-1,1,0,1,1,1,1,1,2,-1,1,1,2,-1,2,1,-1,2,1,1,1,1,1,0,0};
 	int r[num_of_buttons * num_of_buttons];
 	int all_buttons = num_of_buttons*num_of_buttons;
 	for(int i = 0; i <= all_buttons; i++){
 		r[i] = 0;
 	}
+	bomben_verteilen(num_of_buttons * num_of_buttons, array, num_mines);
+	update_zahlen(num_buttons, array);
 	SDL_Window *window; //create a window
 	SDL_Init(SDL_INIT_EVERYTHING);
 	window = SDL_CreateWindow(
