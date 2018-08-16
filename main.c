@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <SDL2/SDL.h>
 #include <stdbool.h>
+#include <SDL2/SDL_image.h>
 
 int button_size;
 int num_buttons;
@@ -115,35 +116,115 @@ void reveal(int button_index, int num_of_buttons, int array[], int revealed[]){
 }
 
 
+void graph(int revealed[], int array[], int num_of_buttons,SDL_Window *window, int window_size,SDL_Renderer *renderer)
+{	
+	int all_buttons = num_of_buttons*num_of_buttons;
+    	int num_lines = num_of_buttons - 1;
+    	float len_lines = window_size/num_of_buttons;
+	
+	
+	SDL_Texture *img0 = NULL;
+	SDL_Texture *img1 = NULL;
+	SDL_Texture *img2 = NULL;
+	SDL_Texture *img3 = NULL;
+	SDL_Texture *img4 = NULL;
+	SDL_Texture *img5 = NULL;
+	SDL_Texture *img6 = NULL;
+	SDL_Texture *img7 = NULL;
+	SDL_Texture *img8 = NULL;
+	SDL_Texture *imgb = NULL;
+		
+		
+	SDL_SetRenderDrawColor(renderer, 0, 0, 0, SDL_ALPHA_OPAQUE);
+	SDL_RenderClear(renderer);
+	SDL_Texture *images[9] = {img0,img1,img2,img3,img4,img5,img6,img7,img8};
+	char path[100];
+	for(int i = 0; i < 9; ++i) {
+		snprintf(path, sizeof(path), "./%d.png", i);
+		images[i] = IMG_LoadTexture(renderer, path);
+		if (!images[i]) {
+			fprintf(stderr, "IMG_LoadTexture: %s: %s\n", path, SDL_GetError());
+		}
+	}
+	imgb = IMG_LoadTexture(renderer, "9.png");
+	if (!imgb) {
+		fprintf(stderr, "IMG_LoadTexture: imgb: %s\n", SDL_GetError());
+	}
+	SDL_SetRenderDrawColor(renderer, 255, 255, 255, SDL_ALPHA_OPAQUE);
+	if(SDL_SetRenderDrawColor(renderer, 255, 255, 255, SDL_ALPHA_OPAQUE) < 0){
+		printf("SetRenderDrawColor: %s\n", SDL_GetError());
+	}
+	for (int i = 1; i <= num_lines; i += 1){
+		SDL_Point p_x[2] = {{len_lines*i,0},{len_lines*i,window_size}};
+		SDL_Point p_y[2] = {{0,len_lines*i},{window_size,len_lines*i}};
+		SDL_RenderDrawLines(renderer, p_x, 2);
+		SDL_RenderDrawLines(renderer, p_y, 2);
+	}
+	for (int i = 0; i < all_buttons; i++){
+		int y_shift = i/num_of_buttons;
+		int x_shift = i % num_of_buttons;
+		SDL_Rect texr = {
+			.x = len_lines * x_shift,
+			.y = len_lines * y_shift,
+			.w = len_lines,
+			.h = len_lines
+		};
+		if(revealed[i] == 1){
+			printf("Drawing x: %d, y: %d of type %d\n", x_shift, y_shift, array[i]);
+			if(array[i] >= 0){
+				printf("Drawing image %d\n", array[i]);
+				SDL_RenderCopy(renderer, images[array[i]], NULL, &texr);
+			}
+			if(array[i] < 0){
+				SDL_RenderCopy(renderer, imgb, NULL, &texr);
+			}
+		}
+			   
+		
+	}
+	SDL_RenderPresent(renderer);
+
+    
+}
+
+
 int main(void){
 
 	bool dead = false;//set player alive
 	SDL_Event e;
 	bool quit = false;
 	int button_size = 50;//size of a button in pixels
-	int num_buttons = 5; //number of buttons in one row/column
+	int num_of_buttons = 5; //number of buttons in one row/column
 	int index; //index of a button
 	int x;
 	int y;
+	const int window_size = num_of_buttons * button_size;
 	int dummy[25] = {-1,1,0,1,1,1,1,1,2,-1,1,1,2,-1,2,1,-1,2,1,1,1,1,1,0,0};
-	int r[num_buttons * num_buttons];
-
+	int r[num_of_buttons * num_of_buttons];
+	int all_buttons = num_of_buttons*num_of_buttons;
+	for(int i = 0; i <= all_buttons; i++){
+		r[i] = 0;
+	}
 	SDL_Window *window; //create a window
 	SDL_Init(SDL_INIT_EVERYTHING);
 	window = SDL_CreateWindow(
 		"minesweeper",
 		SDL_WINDOWPOS_UNDEFINED,
 		SDL_WINDOWPOS_UNDEFINED,
-		(button_size * num_buttons),
-		(button_size * num_buttons),
+		(button_size * num_of_buttons),
+		(button_size * num_of_buttons),
 		SDL_WINDOW_ALWAYS_ON_TOP
 	);
-	
+	SDL_Renderer* renderer = NULL;
+	renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
+	if (!renderer) {
+			fprintf(stderr, "SDL_CreateRenderer: %s\n", SDL_GetError());
+		}
 	if (window == NULL){ //prints error and quits program if window creation fails
 		printf("could not create window: %s\n", SDL_GetError());
 		return 1;
 	}
-	
+	graph(r,dummy,num_of_buttons,window,window_size, renderer);
 	while (!quit){ //listen for events until user quits program by closing window
 
 		while(SDL_PollEvent(&e)){ //handle events
@@ -153,13 +234,14 @@ int main(void){
 			if (e.type == SDL_MOUSEBUTTONDOWN){ //listen for mouse clicks
 				x = e.button.x; //get coordinates of mouse click
 				y = e.button.y;
-				index = button_index(x, y, num_buttons, button_size); //get index
+				index = button_index(x, y, num_of_buttons, button_size); //get index
 						
 
 				if (e.button.button == SDL_BUTTON_LEFT){ //left
 					//printf("clicked left at: %d, %d \n", x, y);
 					printf("clicked button %d\n", index);
-					reveal(index, num_buttons, dummy, r);
+					reveal(index, num_of_buttons, dummy, r);
+					graph(r,dummy,num_of_buttons,window,window_size,renderer);
 					
 				}
 				if (e.button.button == SDL_BUTTON_RIGHT){//right
@@ -173,7 +255,7 @@ int main(void){
 	
 	}
 
-
+	SDL_DestroyRenderer(renderer);
 	SDL_DestroyWindow(window);
 	SDL_Quit();	
 	
