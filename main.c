@@ -7,7 +7,8 @@
 
 int button_size;
 int num_buttons;
-bool dead;
+bool dead;//log whether player died
+
 
 
 int button_index(int x_coordinate, int y_coordinate, int num_of_buttons, int b_size){ 
@@ -49,7 +50,7 @@ void reveal(int button_index, int num_of_buttons, int array[], int revealed[]){
 		case -1:
 			//BOOM
 			printf("BOOM!\n you died.\n");
-			dead = true;
+			dead = true;//set player dead
 
 			break;
 		case 1:
@@ -108,6 +109,8 @@ void reveal(int button_index, int num_of_buttons, int array[], int revealed[]){
 		default:
 			perror("This should not happen. Complain to Anne.");
 	}
+
+	//check whether player has won
 	return;
 	
 
@@ -238,7 +241,7 @@ void graph(int revealed[], int array[], int num_of_buttons,SDL_Window *window, i
 
 int main(void){
 
-	bool dead = false;
+	bool dead = false;//set player alive
 	SDL_Event e;
 	bool quit = false;
 	int button_size = 50;//size of a button in pixels
