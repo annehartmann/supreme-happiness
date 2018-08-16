@@ -6,7 +6,7 @@
 #include <time.h>
 
 int button_size;
-int num_buttons;
+int num_of_buttons;
 bool dead;//log whether player died
 
 
@@ -68,9 +68,10 @@ void reveal(int button_index, int num_of_buttons, int array[], int revealed[]){
 			//reveal empty field
 			printf("revealed empty\n");
 			//recursively call reveal on neighbors
-			if ((button_index% num_of_buttons) != 0){
+			if ((button_index%num_of_buttons) != 0){
+				printf("%dmod%d=%d\n",button_index, num_of_buttons, (button_index%num_of_buttons));
 				//field has left neighbor
-				reveal(button_index - 1, button_index, array, revealed);
+				reveal(button_index - 1, num_of_buttons, array, revealed);
 				no_left = false;
 			} 
 			if ((button_index%num_of_buttons) != (num_of_buttons - 1)){
@@ -128,7 +129,6 @@ int bomben_verteilen (int size, int array[], int anzahl_bomben){
 		if (array[feld_index] == -1) {
 			i--;
 		} else {
-			//printf("%d \n", feld_index);
 			array[feld_index] = -1;
 		}
 	}
@@ -153,7 +153,7 @@ int minenherum(int current_x, int current_y, int size, int array[]) {
 	return counter;
 }
 
-void update_zahlen(int size, int array[]) {
+int update_zahlen(int size, int array[]) {
 	for(int x = 0; x < size; x++) {
 		for(int y = 0; y < size; y++) {
 			int index = x + y * size;
@@ -162,6 +162,7 @@ void update_zahlen(int size, int array[]) {
 			}
 		}
 	}
+	return 0;
 }
 
 
@@ -241,19 +242,18 @@ void graph(int revealed[], int array[], int num_of_buttons,SDL_Window *window, i
 
 int main(void){
 
+	
 	bool dead = false;//set player alive
 	SDL_Event e;
 	bool quit = false;
 	int button_size = 50;//size of a button in pixels
 	int num_of_buttons = 5; //number of buttons in one row/column
 	int index; //index of a button
-	int x;
-	int y;
+	
+	int x; // some x coordinate
+	int y; //some y coordinate
 	const int window_size = num_of_buttons * button_size;
 	int array[25] = {0};
-	for (int i = 0; i<25; i++){
-		printf("%d\n", array[i]);
-	}
 	int num_mines = 3;
 	int dummy[25] = {-1,1,0,1,1,1,1,1,2,-1,1,1,2,-1,2,1,-1,2,1,1,1,1,1,0,0};
 	int r[num_of_buttons * num_of_buttons];
@@ -262,7 +262,7 @@ int main(void){
 		r[i] = 0;
 	}
 	bomben_verteilen(num_of_buttons * num_of_buttons, array, num_mines);
-	update_zahlen(num_buttons, array);
+	update_zahlen(num_of_buttons, array);
 	SDL_Window *window; //create a window
 	SDL_Init(SDL_INIT_EVERYTHING);
 	window = SDL_CreateWindow(
@@ -282,7 +282,7 @@ int main(void){
 		printf("could not create window: %s\n", SDL_GetError());
 		return 1;
 	}
-	graph(r,dummy,num_of_buttons,window,window_size, renderer);
+	graph(r,array,num_of_buttons,window,window_size, renderer);
 	while (!quit){ //listen for events until user quits program by closing window
 
 		while(SDL_PollEvent(&e)){ //handle events
@@ -298,8 +298,8 @@ int main(void){
 				if (e.button.button == SDL_BUTTON_LEFT){ //left
 					//printf("clicked left at: %d, %d \n", x, y);
 					printf("clicked button %d\n", index);
-					reveal(index, num_of_buttons, dummy, r);
-					graph(r,dummy,num_of_buttons,window,window_size,renderer);
+					reveal(index, num_of_buttons, array, r);
+					graph(r,array,num_of_buttons,window,window_size,renderer);
 					
 				}
 				if (e.button.button == SDL_BUTTON_RIGHT){//right
