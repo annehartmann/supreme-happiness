@@ -251,6 +251,9 @@ int main(void){
 	int y;
 	const int window_size = num_of_buttons * button_size;
 	int array[25] = {0};
+	for (int i = 0; i<25; i++){
+		printf("%d\n", array[i]);
+	}
 	int num_mines = 3;
 	int dummy[25] = {-1,1,0,1,1,1,1,1,2,-1,1,1,2,-1,2,1,-1,2,1,1,1,1,1,0,0};
 	int r[num_of_buttons * num_of_buttons];
