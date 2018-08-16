@@ -14,6 +14,7 @@ bool you_win;
 
 
 
+
 int button_index(int x_coordinate, int y_coordinate, int num_of_buttons, int b_size){ 
 
 	//gets coordinates x, y; returns button index
@@ -30,10 +31,16 @@ int button_index(int x_coordinate, int y_coordinate, int num_of_buttons, int b_s
 	return index;
 }
 
-void reveal(int button_index, int num_of_buttons, int array[], int revealed[], int num_mines){
+void reveal(int button_index, int num_of_buttons, int array[], int revealed[], int num_mines, int flagged[]){
 	//reveals number/mine of field button_index
 
 	int number = array[button_index];//look up number in array
+	
+	if (flagged[button_index] == 1){//check that field is unflagged
+		printf("field %d is flagged. Unflag to allow revealing.\n", button_index);
+		return;
+	} 
+	
 	if (revealed[button_index] == 1){//check that field is not already revealed
 		return;
 	}
@@ -78,39 +85,39 @@ void reveal(int button_index, int num_of_buttons, int array[], int revealed[], i
 			//recursively call reveal on neighbors
 			if ((button_index%num_of_buttons) != 0){
 				//field has left neighbor
-				reveal(button_index - 1, num_of_buttons, array, revealed, num_mines);
+				reveal(button_index - 1, num_of_buttons, array, revealed, num_mines, flagged);
 				no_left = false;
 			} 
 			if ((button_index%num_of_buttons) != (num_of_buttons - 1)){
 				//field has right neighbor
-				reveal(button_index + 1, num_of_buttons, array, revealed, num_mines);
+				reveal(button_index + 1, num_of_buttons, array, revealed, num_mines, flagged);
 				no_right = false;
 			}
 			if (button_index >= num_of_buttons){
 				//field has upper neighbor
-				reveal(button_index - num_of_buttons, num_of_buttons, array, revealed, num_mines);
+				reveal(button_index - num_of_buttons, num_of_buttons, array, revealed, num_mines, flagged);
 				no_upper = false;
 			}
 			if (button_index < (num_of_buttons * (num_of_buttons - 1))){
 				//field has lower neighbor
-				reveal(button_index + num_of_buttons, num_of_buttons, array, revealed, num_mines);
+				reveal(button_index + num_of_buttons, num_of_buttons, array, revealed, num_mines, flagged);
 				no_lower = false;
 			}
 			if (!no_left && !no_upper){
 				//field has upper left neighbor
-				reveal(button_index - (num_of_buttons + 1), num_of_buttons, array, revealed, num_mines);
+				reveal(button_index - (num_of_buttons + 1), num_of_buttons, array, revealed, num_mines, flagged);
 			}
 			if (!no_upper && !no_right){
 				//field has upper right neighbor
-				reveal(button_index - num_of_buttons + 1, num_of_buttons, array, revealed, num_mines);
+				reveal(button_index - num_of_buttons + 1, num_of_buttons, array, revealed, num_mines, flagged);
 			}
 			if (!no_left && !no_lower){
 				//field has lower left neighbor
-				reveal(button_index + (num_of_buttons - 1), num_of_buttons, array, revealed, num_mines);
+				reveal(button_index + (num_of_buttons - 1), num_of_buttons, array, revealed, num_mines, flagged);
 			}
 			if (!no_lower && !no_right){
 				//field has lower right neighbor
-				reveal(button_index + num_of_buttons + 1, num_of_buttons, array, revealed, num_mines);
+				reveal(button_index + num_of_buttons + 1, num_of_buttons, array, revealed, num_mines, flagged);
 			}
 			break;
 
@@ -272,7 +279,8 @@ int main(void){
 	int x; // some x coordinate
 	int y; //some y coordinate
 	const int window_size = num_of_buttons * button_size;
-	int array[25] = {0};
+	int array[(num_of_buttons * num_of_buttons)];
+	int flagged[num_of_buttons * num_of_buttons];
 	int num_mines = 3;
 	int dummy[25] = {-1,1,0,1,1,1,1,1,2,-1,1,1,2,-1,2,1,-1,2,1,1,1,1,1,0,0};
 	int r[num_of_buttons * num_of_buttons];
@@ -317,13 +325,27 @@ int main(void){
 				if (e.button.button == SDL_BUTTON_LEFT){ //left
 					//printf("clicked left at: %d, %d \n", x, y);
 					//printf("clicked button %d\n", index);
-					reveal(index, num_of_buttons, array, r, num_mines);
+					reveal(index, num_of_buttons, array, r, num_mines, flagged);
 					graph(r,array,num_of_buttons,window,window_size,renderer);
 					
 				}
 				if (e.button.button == SDL_BUTTON_RIGHT){//right
 					printf("clicked right at: %d, %d \n", x, y);
 					//if not revealed, toggle flag
+					if (r[index] == 0){
+						if(flagged[index] == 1){
+							//if flagged, unflag
+							flagged[index] = 0;
+							printf("unflagged %d\n", index);
+						
+						}
+						else {
+							//if unflagged, flag
+							flagged[index] = 1;
+							printf("flagged %d\n", index);
+						}
+					}
+					
 					//else do nothing
 				}
 			}
