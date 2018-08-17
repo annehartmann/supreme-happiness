@@ -196,9 +196,6 @@ void graph(int revealed[], int array[], int num_of_buttons,SDL_Window *window, i
 	int all_buttons = num_of_buttons*num_of_buttons;
     	int num_lines = num_of_buttons - 1;
     	float len_lines = window_size/num_of_buttons;
-	/*for(int i = 0, i <= 25, i++){
-		printf("%d \n",array[i]);
-	}*/
 	
 	SDL_Texture *img0 = NULL;
 	SDL_Texture *img1 = NULL;
@@ -212,9 +209,17 @@ void graph(int revealed[], int array[], int num_of_buttons,SDL_Window *window, i
 	SDL_Texture *imgb = NULL;
 	SDL_Texture *imgf = NULL;
 	
-		
-	SDL_SetRenderDrawColor(renderer, 0, 0, 0, SDL_ALPHA_OPAQUE);
 	SDL_RenderClear(renderer);
+	if(SDL_RenderClear(renderer) < 0){
+		fprintf(stderr, "SDL_RenderClear: %s\n", SDL_GetError());
+	}
+
+	
+	SDL_SetRenderDrawColor(renderer, 0, 0, 0, SDL_ALPHA_OPAQUE);
+	if(SDL_SetRenderDrawColor(renderer, 0, 0, 0, SDL_ALPHA_OPAQUE) < 0){
+		fprintf(stderr, "SetRenderDrawColor: %s\n", SDL_GetError());
+	}
+	
 	SDL_Texture *images[9] = {img0,img1,img2,img3,img4,img5,img6,img7,img8};
 	char path[100];
 	for(int i = 0; i < 9; ++i) {
@@ -235,6 +240,7 @@ void graph(int revealed[], int array[], int num_of_buttons,SDL_Window *window, i
 		fprintf(stderr, "IMG_LoadTexture: flag: %s\n", SDL_GetError());
 	}
 
+	
 	SDL_SetRenderDrawColor(renderer, 255, 255, 255, SDL_ALPHA_OPAQUE);
 	if(SDL_SetRenderDrawColor(renderer, 255, 255, 255, SDL_ALPHA_OPAQUE) < 0){
 		printf("SetRenderDrawColor: %s\n", SDL_GetError());
@@ -243,7 +249,13 @@ void graph(int revealed[], int array[], int num_of_buttons,SDL_Window *window, i
 		SDL_Point p_x[2] = {{len_lines*i,0},{len_lines*i,window_size}};
 		SDL_Point p_y[2] = {{0,len_lines*i},{window_size,len_lines*i}};
 		SDL_RenderDrawLines(renderer, p_x, 2);
+		if (SDL_RenderDrawLines(renderer, p_x, 2) < 0){
+			fprintf(stderr, "SDL_RenderDrawLines(p_x): %s\n", SDL_GetError());
+		}
 		SDL_RenderDrawLines(renderer, p_y, 2);
+		if (SDL_RenderDrawLines(renderer, p_y, 2) < 0){
+			fprintf(stderr, "SDL_RenderDrawLines(p_y): %s\n", SDL_GetError());
+		}
 	}
 	for (int i = 0; i < all_buttons; i++){
 		int y_shift = i/num_of_buttons;
@@ -257,23 +269,29 @@ void graph(int revealed[], int array[], int num_of_buttons,SDL_Window *window, i
 
 		if(flagged[i] == 1){
 			SDL_RenderCopy(renderer, imgf, NULL, &texr);
+			if (SDL_RenderCopy(renderer, imgf, NULL, &texr) < 0){
+					fprintf(stderr, "SDL_RenderCopy(flag): %s\n", SDL_GetError());
+				}
 		}		
 
 		if(revealed[i] == 1){
-			//printf("Drawing x: %d, y: %d of type %d\n", x_shift, y_shift, array[i]);
 			if(array[i] >= 0){
-				//printf("Drawing image %d\n", array[i]);
 				SDL_RenderCopy(renderer, images[array[i]], NULL, &texr);
+				if (SDL_RenderCopy(renderer, images[array[i]], NULL, &texr) < 0){
+					fprintf(stderr, "SDL_RenderCopy(Zahl): %s\n", SDL_GetError());
+				}
 			}
 			if(array[i] < 0){
 				SDL_RenderCopy(renderer, imgb, NULL, &texr);
+				if (SDL_RenderCopy(renderer, imgb, NULL, &texr) < 0){
+					fprintf(stderr, "SDL_RenderCopy(bombe): %s\n", SDL_GetError());
+				}
 			}
 		}
 			   
 		
 	}
 	SDL_RenderPresent(renderer);
-
     
 }
 
