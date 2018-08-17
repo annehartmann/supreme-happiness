@@ -4,6 +4,7 @@
 #include <stdbool.h>
 #include <SDL2/SDL_image.h>
 #include <time.h>
+#include <assert.h>
 
 int button_size;
 int num_of_buttons;
@@ -18,16 +19,14 @@ bool you_win;
 int button_index(int x_coordinate, int y_coordinate, int num_of_buttons, int b_size){ 
 
 	//gets coordinates x, y; returns button index
-	//note that indices start at 1
+	//note that indices start at 0
 	if ((b_size == 0) || (num_of_buttons == 0)){
 		perror("neither button size nor number of buttons must be 0");
 		return -1;
 	}
 	int index = (x_coordinate/b_size) + ((y_coordinate/b_size) * num_of_buttons);
-	if ((index >= (num_of_buttons * num_of_buttons)) || (index < 0)){
-		perror("This should not happen. Complain to Anne.");
-		return -1;
-	}
+	assert(index >= 0);
+	assert(index < (num_of_buttons * num_of_buttons));
 	return index;
 }
 
@@ -35,11 +34,6 @@ void reveal(int button_index, int num_of_buttons, int array[], int revealed[], i
 	//reveals number/mine of field button_index
 
 	int number = array[button_index];//look up number in array
-	
-	if (flagged[button_index] == 1){//check that field is unflagged
-		printf("field %d is flagged. Unflag to allow revealing.\n", button_index);
-		return;
-	} 
 	
 	if (revealed[button_index] == 1){//check that field is not already revealed
 		return;
@@ -52,6 +46,10 @@ void reveal(int button_index, int num_of_buttons, int array[], int revealed[], i
 		printf("you're dead. What are you trying to achieve?\n");
 		return;
 	}
+	if (flagged[button_index] == 1){//check that field is unflagged
+		printf("field %d is flagged.\n", button_index);
+		return;
+	} 
 	
 	revealed[button_index] = 1;//mark as revealed
 
@@ -287,6 +285,7 @@ int main(void){
 	int all_buttons = num_of_buttons*num_of_buttons;
 	for(int i = 0; i <= all_buttons; i++){
 		r[i] = 0;
+		flagged[i] = 0;
 	}
 	bomben_verteilen(num_of_buttons * num_of_buttons, array, num_mines);
 	update_zahlen(num_of_buttons, array);
@@ -330,7 +329,6 @@ int main(void){
 					
 				}
 				if (e.button.button == SDL_BUTTON_RIGHT){//right
-					printf("clicked right at: %d, %d \n", x, y);
 					//if not revealed, toggle flag
 					if (r[index] == 0){
 						if(flagged[index] == 1){
