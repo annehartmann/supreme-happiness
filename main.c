@@ -4,40 +4,53 @@
 #include <stdbool.h>
 #include <SDL2/SDL_image.h>
 #include <time.h>
+#include <assert.h>
 
 int button_size;
 int num_of_buttons;
+int num_mines;
 bool dead;//log whether player died
+bool you_win;
+
+
 
 
 
 int button_index(int x_coordinate, int y_coordinate, int num_of_buttons, int b_size){ 
 
 	//gets coordinates x, y; returns button index
-	//note that indices start at 1
+	//note that indices start at 0
 	if ((b_size == 0) || (num_of_buttons == 0)){
 		perror("neither button size nor number of buttons must be 0");
 		return -1;
 	}
 	int index = (x_coordinate/b_size) + ((y_coordinate/b_size) * num_of_buttons);
-	if ((index >= (num_of_buttons * num_of_buttons)) || (index < 0)){
-		perror("This should not happen. Complain to Anne.");
-		return -1;
-	}
+	assert(index >= 0);
+	assert(index < (num_of_buttons * num_of_buttons));
 	return index;
 }
 
-void reveal(int button_index, int num_of_buttons, int array[], int revealed[]){
+void reveal(int button_index, int num_of_buttons, int array[], int revealed[], int num_mines, int flagged[]){
 	//reveals number/mine of field button_index
 
 	int number = array[button_index];//look up number in array
+	
 	if (revealed[button_index] == 1){//check that field is not already revealed
 		return;
 	}
-	if (dead){
-		printf("you're dead.\n");
+	if (you_win){
+		printf("you won. What more do you want?\n");
 		return;
 	}
+	if (dead){
+		printf("you're dead. What are you trying to achieve?\n");
+		return;
+	}
+	if (flagged[button_index] == 1){//check that field is unflagged
+		printf("field %d is flagged.\n", button_index);
+		return;
+	} 
+	
 	revealed[button_index] = 1;//mark as revealed
 
 	//booleans noting which neighbors the field has
@@ -62,47 +75,47 @@ void reveal(int button_index, int num_of_buttons, int array[], int revealed[]){
 		case 7:
 		case 8:
 			//reveal number
-			printf("revealed %d\n", number);
+			//printf("revealed %d\n", number);
 			break;
 		case 0:
 			//reveal empty field
-			printf("revealed empty\n");
+			//printf("revealed empty\n");
 			//recursively call reveal on neighbors
-			if ((button_index% num_of_buttons) != 0){
+			if ((button_index%num_of_buttons) != 0){
 				//field has left neighbor
-				reveal(button_index - 1, button_index, array, revealed);
+				reveal(button_index - 1, num_of_buttons, array, revealed, num_mines, flagged);
 				no_left = false;
 			} 
 			if ((button_index%num_of_buttons) != (num_of_buttons - 1)){
 				//field has right neighbor
-				reveal(button_index + 1, num_of_buttons, array, revealed);
+				reveal(button_index + 1, num_of_buttons, array, revealed, num_mines, flagged);
 				no_right = false;
 			}
 			if (button_index >= num_of_buttons){
 				//field has upper neighbor
-				reveal(button_index - num_of_buttons, num_of_buttons, array, revealed);
+				reveal(button_index - num_of_buttons, num_of_buttons, array, revealed, num_mines, flagged);
 				no_upper = false;
 			}
 			if (button_index < (num_of_buttons * (num_of_buttons - 1))){
 				//field has lower neighbor
-				reveal(button_index + num_of_buttons, num_of_buttons, array, revealed);
+				reveal(button_index + num_of_buttons, num_of_buttons, array, revealed, num_mines, flagged);
 				no_lower = false;
 			}
 			if (!no_left && !no_upper){
 				//field has upper left neighbor
-				reveal(button_index - (num_of_buttons + 1), num_of_buttons, array, revealed);
+				reveal(button_index - (num_of_buttons + 1), num_of_buttons, array, revealed, num_mines, flagged);
 			}
 			if (!no_upper && !no_right){
 				//field has upper right neighbor
-				reveal(button_index - num_of_buttons + 1, num_of_buttons, array, revealed);
+				reveal(button_index - num_of_buttons + 1, num_of_buttons, array, revealed, num_mines, flagged);
 			}
 			if (!no_left && !no_lower){
 				//field has lower left neighbor
-				reveal(button_index + (num_of_buttons - 1), num_of_buttons, array, revealed);
+				reveal(button_index + (num_of_buttons - 1), num_of_buttons, array, revealed, num_mines, flagged);
 			}
 			if (!no_lower && !no_right){
 				//field has lower right neighbor
-				reveal(button_index + num_of_buttons + 1, num_of_buttons, array, revealed);
+				reveal(button_index + num_of_buttons + 1, num_of_buttons, array, revealed, num_mines, flagged);
 			}
 			break;
 
@@ -111,12 +124,21 @@ void reveal(int button_index, int num_of_buttons, int array[], int revealed[]){
 	}
 
 	//check whether player has won
+	int fields_revealed = 0;
+	for (int j = 0; j < num_of_buttons * num_of_buttons; j++){
+		fields_revealed = fields_revealed + revealed[j];
+	}
+	if ((((num_of_buttons*num_of_buttons) - fields_revealed) == num_mines) && !dead){
+		printf("you win\n");
+		you_win = true;
+	}
 	return;
 	
 
 }
 
 int bomben_verteilen (int size, int array[], int anzahl_bomben){
+	//places anzahl_bomben bombs randomly in array of length size
 	if (anzahl_bomben > size) {
 		perror("Zu viele Bomben!!!");
 		return 1;
@@ -128,7 +150,6 @@ int bomben_verteilen (int size, int array[], int anzahl_bomben){
 		if (array[feld_index] == -1) {
 			i--;
 		} else {
-			//printf("%d \n", feld_index);
 			array[feld_index] = -1;
 		}
 	}
@@ -136,6 +157,7 @@ int bomben_verteilen (int size, int array[], int anzahl_bomben){
 }
 
 int minenherum(int current_x, int current_y, int size, int array[]) {
+	//counts number of mines adjacent to field 
 	int counter = 0;
 	for(int x_offset = -1; x_offset <= 1; ++x_offset){
 		for(int y_offset = -1; y_offset <= 1; ++y_offset){
@@ -154,6 +176,9 @@ int minenherum(int current_x, int current_y, int size, int array[]) {
 }
 
 int update_zahlen(int size, int array[]) {
+
+	//writes number of mines adjacent to field in array
+
 	for(int x = 0; x < size; x++) {
 		for(int y = 0; y < size; y++) {
 			int index = x + y * size;
@@ -166,7 +191,7 @@ int update_zahlen(int size, int array[]) {
 }
 
 
-void graph(int revealed[], int array[], int num_of_buttons,SDL_Window *window, int window_size,SDL_Renderer *renderer)
+void graph(int revealed[], int array[], int num_of_buttons,SDL_Window *window, int window_size,SDL_Renderer *renderer,int flagged)
 {	
 	int all_buttons = num_of_buttons*num_of_buttons;
     	int num_lines = num_of_buttons - 1;
@@ -185,7 +210,7 @@ void graph(int revealed[], int array[], int num_of_buttons,SDL_Window *window, i
 	SDL_Texture *img7 = NULL;
 	SDL_Texture *img8 = NULL;
 	SDL_Texture *imgb = NULL;
-		
+	
 		
 	SDL_SetRenderDrawColor(renderer, 0, 0, 0, SDL_ALPHA_OPAQUE);
 	SDL_RenderClear(renderer);
@@ -224,9 +249,9 @@ void graph(int revealed[], int array[], int num_of_buttons,SDL_Window *window, i
 			.h = len_lines
 		};
 		if(revealed[i] == 1){
-			printf("Drawing x: %d, y: %d of type %d\n", x_shift, y_shift, array[i]);
+			//printf("Drawing x: %d, y: %d of type %d\n", x_shift, y_shift, array[i]);
 			if(array[i] >= 0){
-				printf("Drawing image %d\n", array[i]);
+				//printf("Drawing image %d\n", array[i]);
 				SDL_RenderCopy(renderer, images[array[i]], NULL, &texr);
 			}
 			if(array[i] < 0){
@@ -244,29 +269,33 @@ void graph(int revealed[], int array[], int num_of_buttons,SDL_Window *window, i
 
 int main(void){
 
+	
 	bool dead = false;//set player alive
+	bool you_win = false;
 	SDL_Event e;
 	bool quit = false;
 	int button_size = 50;//size of a button in pixels
 	int num_of_buttons = 5; //number of buttons in one row/column
 	int index; //index of a button
-	int x;
-	int y;
-	const int window_size = num_of_buttons * button_size;
-	int array[25] = {0};
 	
+	int x; // some x coordinate
+	int y; //some y coordinate
+	const int window_size = num_of_buttons * button_size;
+
+	int array[(num_of_buttons*num_of_buttons)];
+	
+	int array[(num_of_buttons * num_of_buttons)];
+	int flagged[num_of_buttons * num_of_buttons];
 	int num_mines = 3;
 	int dummy[25] = {0,0,1,1,1,0,0,1,-1,1,1,1,2,2,2,-1,1,1,-1,1,1,1,1,1,1};
 	int r[num_of_buttons * num_of_buttons];
 	int all_buttons = num_of_buttons*num_of_buttons;
 	for(int i = 0; i <= all_buttons; i++){
 		r[i] = 0;
+		flagged[i] = 0;
 	}
 	bomben_verteilen(num_of_buttons * num_of_buttons, array, num_mines);
 	update_zahlen(num_of_buttons, array);
-	for (int i = 0; i<25; i++){
-		printf("%d\n", array[i]);
-	}
 	SDL_Window *window; //create a window
 	SDL_Init(SDL_INIT_EVERYTHING);
 	window = SDL_CreateWindow(
@@ -286,7 +315,7 @@ int main(void){
 		printf("could not create window: %s\n", SDL_GetError());
 		return 1;
 	}
-	graph(r,dummy,num_of_buttons,window,window_size, renderer);
+	graph(r,array,num_of_buttons,window,window_size, renderer);
 	while (!quit){ //listen for events until user quits program by closing window
 
 		while(SDL_PollEvent(&e)){ //handle events
@@ -301,15 +330,28 @@ int main(void){
 
 				if (e.button.button == SDL_BUTTON_LEFT){ //left
 					//printf("clicked left at: %d, %d \n", x, y);
-					printf("clicked button %d\n", index);
-					reveal(index, num_of_buttons, dummy, r);
-					graph(r,dummy,num_of_buttons,window,window_size,renderer);
+					//printf("clicked button %d\n", index);
+					reveal(index, num_of_buttons, array, r, num_mines, flagged);
+					graph(r,array,num_of_buttons,window,window_size,renderer);
 					
 					
 				}
 				if (e.button.button == SDL_BUTTON_RIGHT){//right
-					printf("clicked right at: %d, %d \n", x, y);
 					//if not revealed, toggle flag
+					if (r[index] == 0){
+						if(flagged[index] == 1){
+							//if flagged, unflag
+							flagged[index] = 0;
+							printf("unflagged %d\n", index);
+						
+						}
+						else {
+							//if unflagged, flag
+							flagged[index] = 1;
+							printf("flagged %d\n", index);
+						}
+					}
+					
 					//else do nothing
 				}
 			}
