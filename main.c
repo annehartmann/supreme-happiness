@@ -6,7 +6,7 @@
 #include <time.h>
 
 int button_size;
-int num_buttons;
+int num_of_buttons;
 bool dead;//log whether player died
 
 
@@ -153,7 +153,7 @@ int minenherum(int current_x, int current_y, int size, int array[]) {
 	return counter;
 }
 
-void update_zahlen(int size, int array[]) {
+int update_zahlen(int size, int array[]) {
 	for(int x = 0; x < size; x++) {
 		for(int y = 0; y < size; y++) {
 			int index = x + y * size;
@@ -162,6 +162,7 @@ void update_zahlen(int size, int array[]) {
 			}
 		}
 	}
+	return 0;
 }
 
 
@@ -170,7 +171,9 @@ void graph(int revealed[], int array[], int num_of_buttons,SDL_Window *window, i
 	int all_buttons = num_of_buttons*num_of_buttons;
     	int num_lines = num_of_buttons - 1;
     	float len_lines = window_size/num_of_buttons;
-	
+	/*for(int i = 0, i <= 25, i++){
+		printf("%d \n",array[i]);
+	}*/
 	
 	SDL_Texture *img0 = NULL;
 	SDL_Texture *img1 = NULL;
@@ -251,18 +254,19 @@ int main(void){
 	int y;
 	const int window_size = num_of_buttons * button_size;
 	int array[25] = {0};
-	for (int i = 0; i<25; i++){
-		printf("%d\n", array[i]);
-	}
+	
 	int num_mines = 3;
-	int dummy[25] = {-1,1,0,1,1,1,1,1,2,-1,1,1,2,-1,2,1,-1,2,1,1,1,1,1,0,0};
+	int dummy[25] = {0,0,1,1,1,0,0,1,-1,1,1,1,2,2,2,-1,1,1,-1,1,1,1,1,1,1};
 	int r[num_of_buttons * num_of_buttons];
 	int all_buttons = num_of_buttons*num_of_buttons;
 	for(int i = 0; i <= all_buttons; i++){
 		r[i] = 0;
 	}
 	bomben_verteilen(num_of_buttons * num_of_buttons, array, num_mines);
-	update_zahlen(num_buttons, array);
+	update_zahlen(num_of_buttons, array);
+	for (int i = 0; i<25; i++){
+		printf("%d\n", array[i]);
+	}
 	SDL_Window *window; //create a window
 	SDL_Init(SDL_INIT_EVERYTHING);
 	window = SDL_CreateWindow(
@@ -300,6 +304,7 @@ int main(void){
 					printf("clicked button %d\n", index);
 					reveal(index, num_of_buttons, dummy, r);
 					graph(r,dummy,num_of_buttons,window,window_size,renderer);
+					
 					
 				}
 				if (e.button.button == SDL_BUTTON_RIGHT){//right
