@@ -191,7 +191,7 @@ int update_zahlen(int size, int array[]) {
 }
 
 
-void graph(int revealed[], int array[], int num_of_buttons,SDL_Window *window, int window_size,SDL_Renderer *renderer,int flagged)
+void graph(int revealed[], int array[], int num_of_buttons,SDL_Window *window, int window_size,SDL_Renderer *renderer,int flagged[])
 {	
 	int all_buttons = num_of_buttons*num_of_buttons;
     	int num_lines = num_of_buttons - 1;
@@ -210,6 +210,7 @@ void graph(int revealed[], int array[], int num_of_buttons,SDL_Window *window, i
 	SDL_Texture *img7 = NULL;
 	SDL_Texture *img8 = NULL;
 	SDL_Texture *imgb = NULL;
+	SDL_Texture *imgf = NULL;
 	
 		
 	SDL_SetRenderDrawColor(renderer, 0, 0, 0, SDL_ALPHA_OPAQUE);
@@ -227,6 +228,11 @@ void graph(int revealed[], int array[], int num_of_buttons,SDL_Window *window, i
 	imgb = IMG_LoadTexture(renderer, "9.png");
 	if (!imgb) {
 		fprintf(stderr, "IMG_LoadTexture: imgb: %s\n", SDL_GetError());
+	}
+	
+	imgf = IMG_LoadTexture(renderer, "flag.png");
+	if (!imgf) {
+		fprintf(stderr, "IMG_LoadTexture: flag: %s\n", SDL_GetError());
 	}
 
 	SDL_SetRenderDrawColor(renderer, 255, 255, 255, SDL_ALPHA_OPAQUE);
@@ -248,6 +254,11 @@ void graph(int revealed[], int array[], int num_of_buttons,SDL_Window *window, i
 			.w = len_lines,
 			.h = len_lines
 		};
+
+		if(flagged[i] == 1){
+			SDL_RenderCopy(renderer, imgf, NULL, &texr);
+		}		
+
 		if(revealed[i] == 1){
 			//printf("Drawing x: %d, y: %d of type %d\n", x_shift, y_shift, array[i]);
 			if(array[i] >= 0){
@@ -281,9 +292,6 @@ int main(void){
 	int x; // some x coordinate
 	int y; //some y coordinate
 	const int window_size = num_of_buttons * button_size;
-
-	int array[(num_of_buttons*num_of_buttons)];
-	
 	int array[(num_of_buttons * num_of_buttons)];
 	int flagged[num_of_buttons * num_of_buttons];
 	int num_mines = 3;
@@ -315,7 +323,7 @@ int main(void){
 		printf("could not create window: %s\n", SDL_GetError());
 		return 1;
 	}
-	graph(r,array,num_of_buttons,window,window_size, renderer);
+	graph(r,array,num_of_buttons,window,window_size, renderer,flagged);
 	while (!quit){ //listen for events until user quits program by closing window
 
 		while(SDL_PollEvent(&e)){ //handle events
@@ -332,7 +340,7 @@ int main(void){
 					//printf("clicked left at: %d, %d \n", x, y);
 					//printf("clicked button %d\n", index);
 					reveal(index, num_of_buttons, array, r, num_mines, flagged);
-					graph(r,array,num_of_buttons,window,window_size,renderer);
+					graph(r,array,num_of_buttons,window,window_size,renderer,flagged);
 					
 					
 				}
@@ -343,13 +351,14 @@ int main(void){
 							//if flagged, unflag
 							flagged[index] = 0;
 							printf("unflagged %d\n", index);
-						
+							
 						}
 						else {
 							//if unflagged, flag
 							flagged[index] = 1;
 							printf("flagged %d\n", index);
 						}
+						graph(r,array,num_of_buttons,window,window_size,renderer,flagged);
 					}
 					
 					//else do nothing
