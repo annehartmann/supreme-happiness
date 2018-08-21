@@ -9,8 +9,8 @@
 int button_size;
 int num_of_buttons;
 int num_mines;
-bool dead;//log whether player died
-bool you_win;
+//bool dead;//log whether player died
+//bool you_win;
 
 
 
@@ -30,7 +30,7 @@ int button_index(int x_coordinate, int y_coordinate, int num_of_buttons, int b_s
 	return index;
 }
 
-void reveal(int button_index, int num_of_buttons, int array[], int revealed[], int num_mines, int flagged[]){
+void reveal(int button_index, int num_of_buttons, int array[], int revealed[], int num_mines, int flagged[], bool dead, bool you_win){
 	//reveals number/mine of field button_index
 
 	int number = array[button_index];//look up number in array
@@ -84,39 +84,39 @@ void reveal(int button_index, int num_of_buttons, int array[], int revealed[], i
 			//recursively call reveal on neighbors
 			if ((button_index%num_of_buttons) != 0){
 				//field has left neighbor
-				reveal(button_index - 1, num_of_buttons, array, revealed, num_mines, flagged);
+				reveal(button_index - 1, num_of_buttons, array, revealed, num_mines, flagged, dead, you_win);
 				no_left = false;
 			} 
 			if ((button_index%num_of_buttons) != (num_of_buttons - 1)){
 				//field has right neighbor
-				reveal(button_index + 1, num_of_buttons, array, revealed, num_mines, flagged);
+				reveal(button_index + 1, num_of_buttons, array, revealed, num_mines, flagged, dead, you_win);
 				no_right = false;
 			}
 			if (button_index >= num_of_buttons){
 				//field has upper neighbor
-				reveal(button_index - num_of_buttons, num_of_buttons, array, revealed, num_mines, flagged);
+				reveal(button_index - num_of_buttons, num_of_buttons, array, revealed, num_mines, flagged, dead, you_win);
 				no_upper = false;
 			}
 			if (button_index < (num_of_buttons * (num_of_buttons - 1))){
 				//field has lower neighbor
-				reveal(button_index + num_of_buttons, num_of_buttons, array, revealed, num_mines, flagged);
+				reveal(button_index + num_of_buttons, num_of_buttons, array, revealed, num_mines, flagged, dead, you_win);
 				no_lower = false;
 			}
 			if (!no_left && !no_upper){
 				//field has upper left neighbor
-				reveal(button_index - (num_of_buttons + 1), num_of_buttons, array, revealed, num_mines, flagged);
+				reveal(button_index - (num_of_buttons + 1), num_of_buttons, array, revealed, num_mines, flagged, dead, you_win);
 			}
 			if (!no_upper && !no_right){
 				//field has upper right neighbor
-				reveal(button_index - num_of_buttons + 1, num_of_buttons, array, revealed, num_mines, flagged);
+				reveal(button_index - num_of_buttons + 1, num_of_buttons, array, revealed, num_mines, flagged, dead, you_win);
 			}
 			if (!no_left && !no_lower){
 				//field has lower left neighbor
-				reveal(button_index + (num_of_buttons - 1), num_of_buttons, array, revealed, num_mines, flagged);
+				reveal(button_index + (num_of_buttons - 1), num_of_buttons, array, revealed, num_mines, flagged, dead, you_win);
 			}
 			if (!no_lower && !no_right){
 				//field has lower right neighbor
-				reveal(button_index + num_of_buttons + 1, num_of_buttons, array, revealed, num_mines, flagged);
+				reveal(button_index + num_of_buttons + 1, num_of_buttons, array, revealed, num_mines, flagged, dead, you_win);
 			}
 			break;
 
@@ -358,7 +358,7 @@ int main(int argc, char * argv[]){
 		while(SDL_PollEvent(&e)){ //handle events
 			if (e.type == SDL_QUIT){//close window if "x" is pressed
 				quit = true;
-				break;
+				//break;
 			}
 			if (e.type == SDL_MOUSEBUTTONDOWN){ //listen for mouse clicks
 				x = e.button.x; //get coordinates of mouse click
@@ -369,7 +369,7 @@ int main(int argc, char * argv[]){
 				if (e.button.button == SDL_BUTTON_LEFT){ //left
 					//printf("clicked left at: %d, %d \n", x, y);
 					//printf("clicked button %d\n", index);
-					reveal(index, num_of_buttons, array, r, num_mines, flagged);
+					reveal(index, num_of_buttons, array, r, num_mines, flagged, dead, you_win);
 					graph(r,array,num_of_buttons,window,window_size,renderer,flagged);
 					
 					
@@ -401,7 +401,12 @@ int main(int argc, char * argv[]){
 					SDL_DestroyRenderer(renderer);
 					SDL_DestroyWindow(window);
 					SDL_Quit();	
+					dead = false;
+					you_win = false;
+					quit = false;
+					printf("restarting\n");
 					main(argc, argv);
+					
 				}
 			}
 		
