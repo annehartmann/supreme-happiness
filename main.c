@@ -44,6 +44,7 @@ void reveal(int button_index, int num_of_buttons, int array[], int revealed[], i
 	}
 	if (dead){
 		printf("you're dead. What are you trying to achieve?\n");
+		printf("press SPACE to start new game\n");
 		return;
 	}
 	if (flagged[button_index] == 1){//check that field is unflagged
@@ -208,14 +209,16 @@ void graph(int revealed[], int array[], int num_of_buttons,SDL_Window *window, i
 	SDL_Texture *img8 = NULL;
 	SDL_Texture *imgb = NULL;
 	SDL_Texture *imgf = NULL;
+
+
 	
+	SDL_SetRenderDrawColor(renderer, 0, 0, 0, SDL_ALPHA_OPAQUE);
 	SDL_RenderClear(renderer);
 	if(SDL_RenderClear(renderer) < 0){
 		fprintf(stderr, "SDL_RenderClear: %s\n", SDL_GetError());
 	}
 
 	
-	SDL_SetRenderDrawColor(renderer, 0, 0, 0, SDL_ALPHA_OPAQUE);
 	if(SDL_SetRenderDrawColor(renderer, 0, 0, 0, SDL_ALPHA_OPAQUE) < 0){
 		fprintf(stderr, "SetRenderDrawColor: %s\n", SDL_GetError());
 	}
@@ -296,15 +299,23 @@ void graph(int revealed[], int array[], int num_of_buttons,SDL_Window *window, i
 }
 
 
-int main(void){
-
+int main(int argc, char * argv[]){
+	//first argument: number of buttons in one row/column second argument: number of mines
+	int num_of_buttons = atoi(argv[1]); //number of buttons in one row/column
+	int num_mines = atoi(argv[2]);
+	printf("%d mines\n", num_mines);
+	if ((num_of_buttons * num_of_buttons) < num_mines){
+		printf("cannot place more mines than fields available\n");
+		return 1;
+	} 
+	
 	
 	bool dead = false;//set player alive
 	bool you_win = false;
 	SDL_Event e;
 	bool quit = false;
 	int button_size = 50;//size of a button in pixels
-	int num_of_buttons = 5; //number of buttons in one row/column
+	
 	int index; //index of a button
 	
 	int x; // some x coordinate
@@ -312,15 +323,15 @@ int main(void){
 	const int window_size = num_of_buttons * button_size;
 	int array[(num_of_buttons * num_of_buttons)];
 	int flagged[num_of_buttons * num_of_buttons];
-	int num_mines = 3;
 	int dummy[25] = {0,0,1,1,1,0,0,1,-1,1,1,1,2,2,2,-1,1,1,-1,1,1,1,1,1,1};
 	int r[num_of_buttons * num_of_buttons];
 	int all_buttons = num_of_buttons*num_of_buttons;
 	for(int i = 0; i <= all_buttons; i++){
 		r[i] = 0;
 		flagged[i] = 0;
+		array[i] = 0;
 	}
-	bomben_verteilen(num_of_buttons * num_of_buttons, array, num_mines);
+	bomben_verteilen((num_of_buttons * num_of_buttons), array, num_mines);
 	update_zahlen(num_of_buttons, array);
 	SDL_Window *window; //create a window
 	SDL_Init(SDL_INIT_EVERYTHING);
@@ -347,6 +358,7 @@ int main(void){
 		while(SDL_PollEvent(&e)){ //handle events
 			if (e.type == SDL_QUIT){//close window if "x" is pressed
 				quit = true;
+				break;
 			}
 			if (e.type == SDL_MOUSEBUTTONDOWN){ //listen for mouse clicks
 				x = e.button.x; //get coordinates of mouse click
@@ -380,6 +392,16 @@ int main(void){
 					}
 					
 					//else do nothing
+				}
+			}
+			else if (e.type == SDL_KEYDOWN){//listen for key press
+				
+				if (e.key.keysym.scancode == SDL_SCANCODE_SPACE){
+					//if space is pressed, destroy window and create new field
+					SDL_DestroyRenderer(renderer);
+					SDL_DestroyWindow(window);
+					SDL_Quit();	
+					main(argc, argv);
 				}
 			}
 		
